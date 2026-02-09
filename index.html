@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chez Alex - Commandes en ligne</title>
+    <!-- Utilisation de Tailwind CSS pour un design moderne et rapide -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Icônes pour le style -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Personnalisation des couleurs pour correspondre au menu (Rose) */
+        :root {
+            --brand-pink: #ff9eb5;
+            --brand-dark: #8a3b53;
+        }
+        .bg-brand { background-color: var(--brand-pink); }
+        .text-brand { color: var(--brand-dark); }
+        .btn-brand { background-color: #ff6b8b; color: white; transition: 0.3s; }
+        .btn-brand:hover { background-color: #ff476f; }
+        
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff5f7; }
+        
+        /* Animation d'apparition du panier */
+        .modal-enter { opacity: 0; transform: scale(0.9); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.3s ease-out; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- En-tête -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <!-- LOGO INTEGRÉ ICI -->
+                <img src="https://assets.zyrosite.com/oaMKI2l7X7BnFO8Z/whatsapp_image_2026-02-09_at_19.45.49-removebg-preview-cqlJw7GU0J25RZC0.png" alt="Logo Chez Alex" class="h-20 w-auto object-contain rounded-lg">
+                <div>
+                    <h1 class="text-2xl font-bold text-pink-600 leading-tight" style="font-family: cursive;">Chez Alex 🍦</h1>
+                    <p class="text-xs text-gray-500">Le bonheur commence ici</p>
+                </div>
+            </div>
+            <div class="relative cursor-pointer p-2" onclick="toggleCart()">
+                <i class="fas fa-shopping-bag text-3xl text-pink-500"></i>
+                <span id="cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Principal -->
+    <main class="container mx-auto px-4 py-6">
+        
+        <!-- Filtres / Catégories -->
+        <div class="flex overflow-x-auto space-x-2 pb-4 mb-4 scrollbar-hide">
+            <button onclick="filterMenu('all')" class="px-4 py-2 bg-pink-100 text-pink-800 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-pink-200">Tout</button>
+            <button onclick="filterMenu('crepes')" class="px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-gray-50">Crêpes</button>
+            <button onclick="filterMenu('gauffres')" class="px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-gray-50">Gauffres</button>
+            <button onclick="filterMenu('pancakes')" class="px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-gray-50">Pancakes</button>
+            <button onclick="filterMenu('boissons')" class="px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-gray-50">Boissons</button>
+        </div>
+
+        <!-- Grille des produits -->
+        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Les produits sont générés par JavaScript -->
+        </div>
+    </main>
+
+    <!-- Bouton flottant Voir Panier (Visible seulement sur mobile quand panier > 0) -->
+    <div id="floating-cart" class="fixed bottom-4 left-4 right-4 bg-gray-900 text-white p-4 rounded-xl shadow-2xl flex justify-between items-center cursor-pointer hidden transition transform hover:-translate-y-1" onclick="toggleCart()">
+        <div class="flex items-center space-x-3">
+            <div class="bg-white text-black font-bold h-8 w-8 rounded-full flex items-center justify-center" id="float-count">0</div>
+            <span class="font-semibold">Voir la commande</span>
+        </div>
+        <span class="font-bold text-lg" id="float-total">0 F</span>
+    </div>
+
+    <!-- MODAL PANIER & FORMULAIRE -->
+    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-end md:items-center">
+        <div class="bg-white w-full md:w-96 md:rounded-2xl rounded-t-2xl shadow-xl max-h-[90vh] flex flex-col overflow-hidden transform transition-transform duration-300 translate-y-full md:translate-y-0" id="cart-content">
+            
+            <!-- Header du Modal -->
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-pink-50">
+                <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-receipt mr-2"></i>Votre Panier</h2>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-red-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Liste des articles -->
+            <div id="cart-items" class="p-4 overflow-y-auto flex-grow space-y-4">
+                <p class="text-center text-gray-400 py-10">Votre panier est vide 😋</p>
+            </div>
+
+            <!-- Formulaire Client -->
+            <div class="p-4 bg-gray-50 border-t border-gray-200">
+                <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Informations de livraison</h3>
+                <div class="space-y-3">
+                    <input type="text" id="client-name" placeholder="Nom & Prénom" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <input type="text" id="client-location" placeholder="Lieu de livraison précis (Quartier, repère...)" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+            </div>
+
+            <!-- Footer / Total / Action -->
+            <div class="p-4 border-t border-gray-200 bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600">Total à payer</span>
+                    <span class="text-2xl font-bold text-pink-600" id="modal-total">0 FCFA</span>
+                </div>
+                <button onclick="envoyerWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition">
+                    <i class="fab fa-whatsapp text-2xl"></i>
+                    <span>Commander sur WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DONNÉES DU MENU ---
+        const products = [
+            { id: 1, name: "Alex Crêpe", price: 2500, cat: "crepes", desc: "Lanières fines, glace et chocolat", img: "🥞" },
+            { id: 2, name: "Crêpe Nutella", price: 1500, cat: "crepes", desc: "Nutella ou chocolat ou sucre glacé", img: "🍫" },
+            { id: 3, name: "Kristelle Oreo", price: 3000, cat: "crepes", desc: "Lanières fines, morceaux d'Oreo, glace", img: "🍪" },
+            { id: 4, name: "Steven Spéculoos", price: 3000, cat: "crepes", desc: "Sauce spéculoos, morceaux, glace", img: "🍯" },
+            { id: 5, name: "Gauffre Simple", price: 700, cat: "gauffres", desc: "Servie avec du chocolat", img: "🧇" },
+            { id: 6, name: "Alex Gauffre", price: 3000, cat: "gauffres", desc: "Fruits frais, chocolat, glace", img: "🍓" },
+            { id: 7, name: "Mini Pancakes", price: 500, cat: "pancakes", desc: "Servis avec du sirop", img: "🍯" },
+            { id: 8, name: "Alex Pancakes", price: 3000, cat: "pancakes", desc: "Fruits frais, chocolat, glace", img: "🥞" },
+            { id: 9, name: "Milkshake", price: 1500, cat: "boissons", desc: "Vanille, Oreo, Spéculoos, Chocolat...", img: "🥤" },
+            { id: 10, name: "Ice Mojito", price: 1000, cat: "boissons", desc: "Passion, Fruit rouge ou Mangue", img: "🍹" },
+            { id: 11, name: "Ice-Tea", price: 500, cat: "boissons", desc: "Pêche-Citron", img: "🧊" },
+            { id: 12, name: "Soft Glace", price: 600, cat: "boissons", desc: "Glace onctueuse", img: "🍦" }
+        ];
+
+        // --- 2. ÉTAT DU PANIER ---
+        let cart = {}; // Objet stockant { id: quantité }
+
+        // --- 3. AFFICHAGE DU MENU ---
+        const menuGrid = document.getElementById('menu-grid');
+
+        function renderMenu(filter = 'all') {
+            menuGrid.innerHTML = '';
+            products.forEach(product => {
+                if (filter === 'all' || product.cat === filter) {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition border border-gray-100 flex flex-col";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-4xl bg-pink-50 p-3 rounded-xl">${product.img}</div>
+                            <span class="font-bold text-lg text-pink-600">${formatPrice(product.price)}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg mb-1">${product.name}</h3>
+                        <p class="text-sm text-gray-500 mb-4 flex-grow">${product.desc}</p>
+                        <button onclick="addToCart(${product.id})" class="w-full bg-pink-500 text-white py-2 rounded-lg font-semibold hover:bg-pink-600 active:scale-95 transition">
+                            Ajouter au panier
+                        </button>
+                    `;
+                    menuGrid.appendChild(card);
+                }
+            });
+        }
+
+        function filterMenu(category) {
+            renderMenu(category);
+            // Update active button style (optional simplicity)
+        }
+
+        // --- 4. LOGIQUE PANIER ---
+        function addToCart(id) {
+            if (cart[id]) {
+                cart[id]++;
+            } else {
+                cart[id] = 1;
+            }
+            updateCartUI();
+            showToast("Produit ajouté ! 😋");
+        }
+
+        function removeFromCart(id) {
+            if (cart[id]) {
+                cart[id]--;
+                if (cart[id] === 0) delete cart[id];
+            }
+            updateCartUI();
+        }
+
+        function getCartTotal() {
+            let total = 0;
+            let count = 0;
+            for (const [id, qty] of Object.entries(cart)) {
+                const product = products.find(p => p.id == id);
+                if (product) {
+                    total += product.price * qty;
+                    count += qty;
+                }
+            }
+            return { total, count };
+        }
+
+        function updateCartUI() {
+            const { total, count } = getCartTotal();
+            
+            // Update badges
+            const countBadges = [document.getElementById('cart-count'), document.getElementById('float-count')];
+            countBadges.forEach(badge => {
+                badge.innerText = count;
+                badge.classList.toggle('hidden', count === 0);
+            });
+
+            // Update Floating Bar
+            document.getElementById('float-total').innerText = formatPrice(total);
+            document.getElementById('floating-cart').classList.toggle('hidden', count === 0);
+            
+            // Update Modal Content
+            const cartItemsContainer = document.getElementById('cart-items');
+            document.getElementById('modal-total').innerText = formatPrice(total);
+            
+            if (count === 0) {
+                cartItemsContainer.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-gray-400"><i class="fas fa-shopping-basket text-4xl mb-2"></i><p>Votre panier est vide</p></div>';
+            } else {
+                cartItemsContainer.innerHTML = '';
+                for (const [id, qty] of Object.entries(cart)) {
+                    const product = products.find(p => p.id == id);
+                    cartItemsContainer.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-gray-800">${product.name}</span>
+                                <span class="text-xs text-gray-500">${formatPrice(product.price)} x ${qty}</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="removeFromCart(${id})" class="w-8 h-8 rounded-full bg-white border border-gray-300 text-gray-600 flex items-center justify-center hover:bg-red-50 hover:text-red-500 font-bold">-</button>
+                                <span class="font-bold w-4 text-center">${qty}</span>
+                                <button onclick="addToCart(${id})" class="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center hover:bg-pink-600 font-bold">+</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // --- 5. INTERFACE UTILISATEUR ---
+        const modal = document.getElementById('cart-modal');
+        const modalContent = document.getElementById('cart-content');
+
+        function toggleCart() {
+            const isHidden = modal.classList.contains('hidden');
+            if (isHidden) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.remove('translate-y-full');
+                }, 10);
+            } else {
+                modalContent.classList.add('translate-y-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        // --- 6. WHATSAPP & CHECKOUT ---
+        function envoyerWhatsApp() {
+            const { total, count } = getCartTotal();
+            if (count === 0) return alert("Le panier est vide !");
+
+            const name = document.getElementById('client-name').value.trim();
+            const location = document.getElementById('client-location').value.trim();
+
+            if (!name || !location) {
+                alert("Merci de remplir votre Nom et le Lieu de livraison pour commander !");
+                return;
+            }
+
+            // Construction du message
+            let message = `*NOUVELLE COMMANDE CHEZ ALEX* 🍦%0A`;
+            message += `👤 Client: *${name}*%0A`;
+            message += `📍 Lieu: *${location}*%0A`;
+            message += `---------------------------%0A`;
+
+            for (const [id, qty] of Object.entries(cart)) {
+                const product = products.find(p => p.id == id);
+                message += `▪️ ${qty}x ${product.name} (${formatPrice(product.price * qty)})%0A`;
+            }
+
+            message += `---------------------------%0A`;
+            message += `💰 *TOTAL À PAYER: ${formatPrice(total)}*%0A`;
+            message += `📅 Date: ${new Date().toLocaleDateString()} à ${new Date().toLocaleTimeString()}`;
+
+            // Numéro configuré
+            const phone = "22655192087"; 
+            
+            const url = `https://wa.me/${phone}?text=${message}`;
+            window.open(url, '_blank');
+        }
+
+        // Utilitaires
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " F";
+        }
+
+        function showToast(msg) {
+            // Simple toast notification logic could go here
+            console.log(msg);
+        }
+
+        // Init
+        renderMenu();
+
+    </script>
+</body>
+</html>
